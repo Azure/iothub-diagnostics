@@ -5,10 +5,8 @@ const config = require('../config');
 const EventHubClient = require('azure-event-hubs').Client;
 const ServiceClient = require('azure-iothub').Client;
 const Message = require('azure-iot-common').Message;
-
-var connectionString = config.iotHubInfo.connectionString;
-var serviceConnection = ServiceClient.fromConnectionString(connectionString);
-var eventHubConnection = EventHubClient.fromConnectionString(connectionString);
+var serviceConnection = null;
+var eventHubConnection = null;
 
 // Called whenever an error occurs in either the message callback or the  eventhub connection setup
 function errorCb(err) {
@@ -24,12 +22,20 @@ function messageReceivedCb(message) {
   if(!targetDevice) {
     logger.crit('Client telemetry message did not contain the device, unable to respond.');
   } else {
-    serviceConnection.send(targetDevice, JSON.stringify(config.testCommand));
+    serviceConnection.send(targetDevice, JSON.stringify(config.testCommand), function(err, res) {
+          if(err) logger.crit("Error sending command: " + err);
+          if(res) logger.debug("Command sent, status = " + res.constructor.name);
+      });
   }
 };
 
 // Called to start the service
-function open(ready) {
+function open(iothubConnectionString, ready) {
+  if(serviceConnection || eventHubConnection) close();
+
+  serviceConnection = ServiceClient.fromConnectionString(iothubConnectionString);
+  eventHubConnection = EventHubClient.fromConnectionString(iothubConnectionString);
+
   serviceConnection.open(function(err) {
     if (err) {
       logger.fatal('Unable to open connection to Eventhub: ' + err.message);
@@ -37,7 +43,6 @@ function open(ready) {
     }
 
     logger.trace('Test service open.');
-
     eventHubConnection.open()
       .then(eventHubConnection.getPartitionIds.bind(eventHubConnection))
       .then(function (partitionIds) {
@@ -56,8 +61,15 @@ function open(ready) {
 
 // Closes the connection to the eventhub and to the DeviceClient.
 function close() {
-  eventHubConnection.close();
-  serviceConnection.close();
+  if(eventHubConnection) {
+    eventHubConnection.close();
+    eventHubConnection = null;
+  }
+
+  if(serviceConnection) { 
+    serviceConnection.close(function(err) {});
+    serviceConnection = null;
+  }
 }
 
 module.exports = {

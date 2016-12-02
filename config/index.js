@@ -1,13 +1,14 @@
 'use strict';
 
-var iotHubInfo = require('./config');
-iotHubInfo.connectionString = 'HostName=' + iotHubInfo.hostName +';SharedAccessKeyName=' + iotHubInfo.sharedAccessKeyName + ';SharedAccessKey=' + iotHubInfo.sharedAccessKey;
 
+const ConnectionString = require('azure-iothub').ConnectionString;
+ 
 const consoleLogLevel = "info";
 const fileLogLevel = "debug";
 const logFileName = "trace.log";
 const testCommand = 'Terminate yourself';
 const pingUrl = 'www.microsoft.com';
+const httpsRequestUrl = 'https://www.microsoft.com/';
 
 module.exports = {
   consoleLogLevel: consoleLogLevel,
@@ -15,5 +16,5 @@ module.exports = {
   logFileName: logFileName,
   pingUrl: pingUrl,
   testCommand: testCommand,
-  iotHubInfo: iotHubInfo
+  httpsRequestUrl: httpsRequestUrl
 };

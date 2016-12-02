@@ -8,16 +8,6 @@ const async  = require('async');
 
 var deviceId = 'device' + require('node-uuid').v4();
 
-function startTestService(done) {
-  logger.trace('Starting test service.');
-  testService.open(done);
-}
-
-function createDevice(done) {
-  logger.trace('Registering device');
-  deviceManager.createDevice(deviceId, done);
-}
-
 function runTest(deviceConnectionString, protocol, label, done) {
   logger.info('');
   logger.info('Starting ' + label + ' Test...');
@@ -42,31 +32,36 @@ function amqpWsTest(deviceConnectionString, done) {
 }
 
 function httpTest(deviceConnectionString, done) {
-  runTest(deviceConnectionString, require('azure-iot-device-http').Http, 'HTTP', done);
+  runTest(deviceConnectionString, require('azure-iot-device-http').Http, 'HTTPS', done);
 }
 
 function mqttTest(deviceConnectionString, done) {
   runTest(deviceConnectionString, require('azure-iot-device-mqtt').Mqtt, 'Mqtt', done);
 };
 
-function cleanup(deviceConnectionString) {
-  testService.close();
-  deviceManager.deleteDevice(deviceId, function () {});
-}
-
-function run(done) {
+function run(iotHubConnectionString, done) {
   async.waterfall([
       // Step 1, start event hub reader
-      startTestService,
+      function(callback) {
+        logger.trace('Starting test service.');
+        testService.open(iotHubConnectionString, callback);
+      },
       // Step 2, create the device
-      createDevice,
+      function(callback) { 
+        logger.trace('Registering temporary device');
+        deviceManager.createDevice(iotHubConnectionString, deviceId, callback);
+      },
       // Step 3, run the tests
       amqpTest,
       amqpWsTest,
       httpTest,
       mqttTest,
       // Step 4, cleanup
-      cleanup,
+      function(deviceConnectionString) {
+        logger.trace('Removing temporary device');
+        testService.close();
+        deviceManager.deleteDevice(iotHubConnectionString, deviceId, function () {});
+      }
     ],
     done);
 };

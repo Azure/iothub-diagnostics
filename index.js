@@ -3,6 +3,7 @@
 const logger = require('./lib').logger;
 const async  = require('async');
 const config = require('./config');
+const ConnectionString = require('azure-iothub').ConnectionString;
 
 logger.info('*******************************************')
 logger.info('* Executing the Microsoft IOT Trace tool. *');
@@ -18,11 +19,19 @@ async.series([
     logger.info('');
     logger.info('--- Executing IOT Hub tests ---');
 
-    if(!config.iotHubInfo.hostName || !config.iotHubInfo.sharedAccessKey || !config.iotHubInfo.sharedAccessKeyName) {
-      logger.crit('Skipping IotHub tests because no IotHub configuration provided. Enter IOT Hub information in config/config.json.');
+    if(process.argv.length <= 2) {
+      logger.crit('Skipping IotHub tests because no IotHub configuration provided. To verify connectivity to an IotHub provide the connection string on the command line.');
       return done();
     } else {
-      require('./iothubtests').run(done);
+      try {
+        ConnectionString.parse(process.argv[2])
+      }
+      catch(exception) {
+        logger.crit('Unable to parse the connection string, verify correctness: ' + exception);
+        return done();  
+      }
+
+      require('./iothubtests').run(process.argv[2], done);
     }
   }
 ]);

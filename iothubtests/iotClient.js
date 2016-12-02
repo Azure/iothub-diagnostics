@@ -9,7 +9,7 @@ var runTest = function(deviceConnectionString, protocol, deviceId, done) {
   var client = require('azure-iot-device').Client.fromConnectionString(deviceConnectionString, protocol);
 
   logger.trace('Opening the client.');
-
+  
   // Connect to the service
   client.open(function (err) {
     if (err) {
@@ -35,12 +35,17 @@ var runTest = function(deviceConnectionString, protocol, deviceId, done) {
         }
       });
 
-      // Send initial telemetry event
-      var msg = new Message(deviceId);
-      client.sendEvent(msg, function(err, res) {
-        if(err) logger.crit('Error sending telemetry: ' + err);
-        if(res) logger.debug('Telemetry sent, status: ' + res.constructor.name);
-      });
+      // on message asynchronously subscribes for messages, but doesnt give us a callback when its done.
+      //  This impacts MQTT, because if the device has never subscribed then the service will drop any messages sent to it.
+      //  So we need to wait a few seconds before we send the message to try and smooth that out.
+      setTimeout(function() {
+        // Send initial telemetry event
+        var msg = new Message(deviceId);
+        client.sendEvent(msg, function(err, res) {
+          if(err) logger.crit('Error sending telemetry: ' + err);
+          if(res) logger.debug('Telemetry sent, status: ' + res.constructor.name);
+        });
+      }, 3000);
     }
   });
 }

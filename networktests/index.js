@@ -3,6 +3,7 @@
 const logger = require('../lib').logger;
 const config = require('../config');
 const dns = require('dns');
+const https = require('https');
 const ping = require('net-ping');
 
 function traceRouteStepCb (err, target, ttl, sent, rcvd) {
@@ -16,6 +17,27 @@ function traceRouteStepCb (err, target, ttl, sent, rcvd) {
   } else {
       logger.debug(target + ': ' + target + ' (ttl=' + ttl + ' ms=' + ms +')');
   }
+}
+
+function httpsRequest(done) {
+  logger.info('');
+  logger.info("Sending https request to '" + config.httpsRequestUrl + "'");
+
+  var req = https.get(config.httpsRequestUrl, (res) => {
+    res.on('data', (d) =>
+    {
+        logger.info('--> Completed https request');
+        return done(null);
+    });
+  });
+  
+  req.on('error', (e) => {
+      logger.warn('--> Failed to make https request.');
+      logger.debug(e);
+      return done(e);
+  });
+
+  req.end();
 }
 
 function pingIpv4Address(ipv4Address, done) {
@@ -56,7 +78,7 @@ function pingIpv4Address(ipv4Address, done) {
       } 
 
       session.close();
-      return done(null);    
+      return httpsRequest(done);    
     });
   });
 };
@@ -71,7 +93,7 @@ function run(done) {
        logger.crit("--> Failed to resolve host, error: " + err.code);
        return done(err);
     } else {
-       logger.info('--> Successfully resolved DNS.');
+       logger.info('--> Successfully resolved DNS to ' + addresses[0] + '.' );
        logger.debug(JSON.stringify(domain) + ' using address: ' + addresses[0]);
        pingIpv4Address(addresses[0], done);
     }
