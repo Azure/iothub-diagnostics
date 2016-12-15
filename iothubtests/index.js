@@ -28,7 +28,7 @@ function amqpTest(deviceConnectionString, done) {
 };
 
 function amqpWsTest(deviceConnectionString, done) {
-  runTest(deviceConnectionString, require('azure-iot-device-amqp-ws').AmqpWs, 'AMQP-WS', done);
+  runTest(deviceConnectionString, require('azure-iot-device-amqp').AmqpWs, 'AMQP-WS', done);
 }
 
 function httpTest(deviceConnectionString, done) {
