@@ -5,7 +5,6 @@ const config = require('../config');
 const dns = require('dns');
 const https = require('https');
 const ping = require('ping');
-const Traceroute = require('nodejs-traceroute');
 
 function dnsResolve(domain, done) {
   logger.info('');
@@ -34,33 +33,6 @@ function pingIpv4Address(ipv4Address, done) {
       done();
     }
   });
-}
-
-function traceRoute(ipv4Address, done) {
-  var tracer = new Traceroute();
-  var hopCount = 0;
-  logger.info('');
-  logger.info("Traceroute on IPV4 address '" + ipv4Address + "'...");
-  try {
-    tracer
-      .on('hop', function(hop) {
-        logger.info('Hop: ' + JSON.stringify(hop));
-        hopCount++;
-      })
-      .on('close', function(exitCode) {
-        if (exitCode === 0) {
-          logger.info('--> Successfully ran traceroute on ' + ipv4Address + ': ' + hopCount + ' hops.');
-          done(null, hopCount);
-        } else {
-          logger.crit ('--> Failed to trace ' + ipv4Address);
-          done(new Error('failed after ' + hopCount + ' hops'));
-        }
-      });
-    tracer.trace(ipv4Address);
-  } catch (err) {
-    logger.crit ('--> Failed to traceroute: ' + err.message);
-    done(err);
-  }
 }
 
 function httpsRequest(done) {
@@ -95,13 +67,7 @@ function run(done) {
         if (err) {
           return done(err);
         } else {
-          traceRoute(ipAddress, function (err) {
-            if (err) {
-              return done(err);
-            } else {
-              return httpsRequest(done);
-            }
-          });
+          return httpsRequest(done);
         }
       });
     }
