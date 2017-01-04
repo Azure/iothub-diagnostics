@@ -15,16 +15,15 @@ function createDevice(iotHubConnectionString, deviceId, done) {
   };
   logger.trace("Creating device '" + device.deviceId + "'");
   
-  registry.create(device, function(err, deviceInfo, res) {
+  registry.create(device, function(err, deviceInfo) {
     if (err) {
       logger.fatal('Unable to register device, error: ' + err.toString());
       return done(err);
     }
 
-    logger.trace('Device creation status code: ' + res.statusCode + ' ' + res.statusMessage);
     logger.trace('Created device: ' + JSON.stringify(deviceInfo));
 
-    var deviceConnectionString = 'HostName=' + ConnectionString.parse(iotHubConnectionString).HostName + ';DeviceId=' + deviceInfo.deviceId + ';SharedAccessKey=' + deviceInfo.authentication.SymmetricKey.primaryKey;
+    var deviceConnectionString = 'HostName=' + ConnectionString.parse(iotHubConnectionString).HostName + ';DeviceId=' + deviceInfo.deviceId + ';SharedAccessKey=' + deviceInfo.authentication.symmetricKey.primaryKey;
     logger.trace('Connectionstring: ' + deviceConnectionString);
 
     return done(null, deviceConnectionString);
@@ -34,7 +33,7 @@ function createDevice(iotHubConnectionString, deviceId, done) {
 // Delete a device
 function deleteDevice(iotHubConnectionString, deviceId, done) {
   var registry = Registry.fromConnectionString(iotHubConnectionString);
-  registry.delete(deviceId, function(err, deviceInfo, res) {
+  registry.delete(deviceId, function(err, deviceInfo) {
     logger.trace('Deleted device ' + deviceId);
     return done(err);
   });
