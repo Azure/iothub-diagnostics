@@ -2,11 +2,12 @@
 
 
 const ConnectionString = require('azure-iothub').ConnectionString;
+const uuid = require('uuid');
  
 const consoleLogLevel = "info";
 const fileLogLevel = "debug";
 const logFileName = "trace.log";
-const testCommand = 'Terminate yourself';
+const testCommand = uuid.v4();
 const pingUrl = 'www.microsoft.com';
 const httpsRequestUrl = 'https://www.microsoft.com/';
 
