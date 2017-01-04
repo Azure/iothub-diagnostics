@@ -6,7 +6,7 @@ const deviceManager = require('./deviceManager');
 const testService = require('./testService');
 const async  = require('async');
 
-var deviceId = 'device' + require('node-uuid').v4();
+var deviceId = 'device' + require('uuid').v4();
 
 function runTest(deviceConnectionString, protocol, label, done) {
   logger.info('');
