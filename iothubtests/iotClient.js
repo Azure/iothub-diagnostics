@@ -20,18 +20,13 @@ var runTest = function(deviceConnectionString, protocol, deviceId, done) {
 
       // Listen for messages
       client.on('message', function (msg) {
-        client.complete(msg, function(err, res) {
-          if (err) logger.crit('Error completing message: ' + err.toString());
-          return client.close(done);
-        });
-
-        if(JSON.parse(msg.data) != config.testCommand) {
-          // ignore any error, already failed dont want log further errors and confuse logs
-          client.close(function(err) {});
-
-          return done(new Error("Incorrect command received from service '" + msg.data + "'"));
+        if(JSON.parse(msg.data) === config.testCommand) {
+          client.complete(msg, function(err, res) {
+            if (err) logger.crit('Error completing message: ' + err.toString());
+            return client.close(done);
+          });
         } else {
-          logger.debug('Client received command from service');
+          logger.debug('Client received invalid command from service: ignoring');
         }
       });
 
