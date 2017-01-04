@@ -1,7 +1,9 @@
 {
   "name": "iothub-diagnostics",
   "version": "1.1.2",
-  "description": "",
+  "description": "Azure IoT Hub connectivity diagnostic tool",
+  "author": "Microsoft Corporation",
+  "license": "MIT",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -20,6 +22,12 @@
     "ping": "^0.2.1",
     "winston": "^2.2.0"
   },
-  "author": "IOT-SRE",
-  "license": "ISC"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azure/iothub-diagnostics.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/iothub-diagnostics/issues"
+  },
+  "homepage": "https://github.com/Azure/iothub-diagnostics#readme"
 }
