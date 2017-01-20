@@ -10,7 +10,7 @@ cd %buildroot%
 call npm install
 if errorlevel 1 goto :end
 
-call node index.js %IOTHUB_CONNECTION_STRING%
+call node iothub-diagnostics.js %IOTHUB_CONNECTION_STRING%
 
 :end
 exit /b %errorlevel%

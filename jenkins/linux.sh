@@ -7,5 +7,5 @@ cd $buildroot
 npm install
 [ $? -eq 0 ] || exit $?
 
-node index.js $IOTHUB_CONNECTION_STRING
+node iothub-diagnostics.js $IOTHUB_CONNECTION_STRING
 [ $? -eq 0 ] || exit $?
