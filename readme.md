@@ -24,7 +24,7 @@ npm install -g iothub-diagnostics
 To run the tool, from your command prompt execute the following command: 
 
 ```shell
-node index HostName=<my-hub>.azure-devices.net;SharedAccessKeyName=<my-policy>;SharedAccessKey=<my-policy-key>
+iothub-diagnostics HostName=<my-hub>.azure-devices.net;SharedAccessKeyName=<my-policy>;SharedAccessKey=<my-policy-key>
 ```
 
 > Note: See [Set up IoT Hub](../../doc/setup_iothub.md) for information about how to retrieve your IoT hub connection string.
