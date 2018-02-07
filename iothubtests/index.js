@@ -60,10 +60,10 @@ function run(iotHubConnectionString, done) {
       httpTest,
       mqttTest,
       // Step 4, cleanup
-      function(deviceConnectionString) {
+      function(deviceConnectionString, callback) {
         logger.trace('Removing temporary device');
         testService.close();
-        deviceManager.deleteDevice(iotHubConnectionString, deviceId, function () {});
+        deviceManager.deleteDevice(iotHubConnectionString, deviceId, callback);
       }
     ],
     done);
