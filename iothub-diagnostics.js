@@ -38,4 +38,6 @@ async.series([
       require('./iothubtests').run(process.argv[2], done);
     }
   }
-]);
+], function () {
+  process.exit(0);
+});
