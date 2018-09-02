@@ -6,8 +6,17 @@
 
 const logger = require('./lib').logger;
 const async  = require('async');
-const config = require('./config');
 const ConnectionString = require('azure-iothub').ConnectionString;
+const argv = require('yargs')
+.usage('$0 [hub connection string]')
+.alias('d', 'device')
+.describe('device', 'use the specified device id (Symmetric Key authentication only)')
+.alias('h', 'help')
+.help('h')
+.alias('g', 'consumerGroup')
+.describe('consumerGroup', 'consumer group to use on the Event-hubs compatible endpoint')
+.demandCommand(1)
+.argv;
 
 logger.info('*******************************************')
 logger.info('* Executing the Microsoft IOT Trace tool. *');
@@ -28,14 +37,14 @@ async.series([
       return done();
     } else {
       try {
-        ConnectionString.parse(process.argv[2])
+        ConnectionString.parse(argv._[0])
       }
       catch(exception) {
         logger.crit('Unable to parse the connection string, verify correctness: ' + exception);
-        return done();  
+        return done();
       }
 
-      require('./iothubtests').run(process.argv[2], done);
+      require('./iothubtests').run(argv._[0], argv.consumerGroup, argv.device, done);
     }
   }
 ], function () {

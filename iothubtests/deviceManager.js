@@ -5,9 +5,20 @@
 
 const logger = require('../lib').logger;
 const iothub = require('azure-iothub');
+const errors = require('azure-iot-common').errors;
 const Registry = iothub.Registry;
-const Device = iothub.Device;
 const ConnectionString = require('azure-iothub').ConnectionString;
+
+function getDevice(iotHubConnectionString, deviceId, done) {
+  var registry = Registry.fromConnectionString(iotHubConnectionString);
+  registry.get(deviceId, done);
+}
+
+function getDeviceConnectionString(iotHubConnectionString, deviceInfo) {
+  var deviceConnectionString = 'HostName=' + ConnectionString.parse(iotHubConnectionString).HostName + ';DeviceId=' + deviceInfo.deviceId + ';SharedAccessKey=' + deviceInfo.authentication.symmetricKey.primaryKey;
+  logger.trace('Connectionstring: ' + deviceConnectionString);
+  return deviceConnectionString;
+}
 
 // Create a new device
 function createDevice(iotHubConnectionString, deviceId, done) {
@@ -17,7 +28,7 @@ function createDevice(iotHubConnectionString, deviceId, done) {
     status: 'enabled'
   };
   logger.trace("Creating device '" + device.deviceId + "'");
-  
+
   registry.create(device, function(err, deviceInfo) {
     if (err) {
       logger.fatal('Unable to register device, error: ' + err.toString());
@@ -26,10 +37,7 @@ function createDevice(iotHubConnectionString, deviceId, done) {
 
     logger.trace('Created device: ' + JSON.stringify(deviceInfo));
 
-    var deviceConnectionString = 'HostName=' + ConnectionString.parse(iotHubConnectionString).HostName + ';DeviceId=' + deviceInfo.deviceId + ';SharedAccessKey=' + deviceInfo.authentication.symmetricKey.primaryKey;
-    logger.trace('Connectionstring: ' + deviceConnectionString);
-
-    return done(null, deviceConnectionString);
+    return done(null, getDeviceConnectionString(iotHubConnectionString, deviceInfo));
   });
 };
 
@@ -43,6 +51,8 @@ function deleteDevice(iotHubConnectionString, deviceId, done) {
 }
 
 module.exports = {
+  getDevice: getDevice,
+  getDeviceConnectionString: getDeviceConnectionString,
   createDevice: createDevice,
   deleteDevice: deleteDevice
 }

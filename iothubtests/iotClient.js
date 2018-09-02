@@ -7,19 +7,22 @@ const logger = require('../lib').logger;
 const config = require('../config')
 const iothub = require('azure-iothub');
 const Message = require('azure-iot-device').Message;
+const DeviceConnectionString = require('azure-iot-device').ConnectionString;
+const DeviceClient = require('azure-iot-device').Client;
 
-var runTest = function(deviceConnectionString, protocol, deviceId, done) {
-  var client = require('azure-iot-device').Client.fromConnectionString(deviceConnectionString, protocol);
+var runTest = function(deviceConnectionString, protocol, done) {
+  var testDeviceId = DeviceConnectionString.parse(deviceConnectionString).DeviceId;
+  var client = DeviceClient.fromConnectionString(deviceConnectionString, protocol);
 
-  logger.trace('Opening the client.');
-  
+  logger.trace('Opening the client for ' + testDeviceId);
+
   // Connect to the service
   client.open(function (err) {
     if (err) {
       logger.fatal('Could not connect to IOT HUB: ' + err);
       return done(err);
     } else {
-      logger.debug('Client connected, sending message');        
+      logger.debug('Client connected, sending message');
 
       // Listen for messages
       client.on('message', function (msg) {
@@ -38,7 +41,7 @@ var runTest = function(deviceConnectionString, protocol, deviceId, done) {
       //  So we need to wait a few seconds before we send the message to try and smooth that out.
       setTimeout(function() {
         // Send initial telemetry event
-        var msg = new Message(deviceId);
+        var msg = new Message(testDeviceId);
         client.sendEvent(msg, function(err, res) {
           if(err) logger.crit('Error sending telemetry: ' + err);
           if(res) logger.debug('Telemetry sent, status: ' + res.constructor.name);

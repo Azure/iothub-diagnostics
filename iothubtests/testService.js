@@ -5,9 +5,9 @@
 
 const logger = require('../lib').logger;
 const config = require('../config');
-const EventHubClient = require('azure-event-hubs').Client;
+const EventHubClient = require('@azure/event-hubs').EventHubClient;
+const EventPosition = require('@azure/event-hubs').EventPosition;
 const ServiceClient = require('azure-iothub').Client;
-const Message = require('azure-iot-common').Message;
 var serviceConnection = null;
 var eventHubConnection = null;
 
@@ -20,7 +20,7 @@ function errorCb(err) {
 function messageReceivedCb(message) {
   logger.debug('Service successfully received telemetry from client.');
   logger.trace(JSON.stringify(message));
-  var targetDevice = message.body;
+  var targetDevice = message.body.toString();
 
   if(!targetDevice) {
     logger.crit('Client telemetry message did not contain the device, unable to respond.');
@@ -33,11 +33,10 @@ function messageReceivedCb(message) {
 };
 
 // Called to start the service
-function open(iothubConnectionString, ready) {
+function open(iothubConnectionString, consumerGroup, done) {
   if(serviceConnection || eventHubConnection) close();
 
   serviceConnection = ServiceClient.fromConnectionString(iothubConnectionString);
-  eventHubConnection = EventHubClient.fromConnectionString(iothubConnectionString);
 
   serviceConnection.open(function(err) {
     if (err) {
@@ -46,21 +45,34 @@ function open(iothubConnectionString, ready) {
     }
 
     logger.trace('Test service open.');
-    eventHubConnection.open()
-      .then(eventHubConnection.getPartitionIds.bind(eventHubConnection))
-      .then(function (partitionIds) {
-        return partitionIds.map(function (partitionId) {
-          return eventHubConnection.createReceiver('$Default', partitionId, { 'startAfterTime' : Date.now()}).then(function(receiver) {
-            logger.trace('Created partition receiver: ' + partitionId)
-            receiver.on('errorReceived', errorCb);
-            receiver.on('message', messageReceivedCb);
-            });
-        });
-      })
-      .then(function() { ready() })
-      .catch(errorCb);
+    EventHubClient.createFromIotHubConnectionString(iothubConnectionString)
+    .then(function (ehClient) {
+      eventHubConnection = ehClient;
+      return eventHubConnection.getPartitionIds();
+    })
+    .then(function (partitionIds) {
+      return partitionIds.map(function (partitionId) {
+        eventHubConnection.receive(
+          partitionId,
+          messageReceivedCb,
+          errorCb,
+          {
+            consumerGroup: consumerGroup,
+            eventPosition: EventPosition.fromEnqueuedTime(Date.now())
+          }
+        );
+        return null;
+      });
+    })
+    .then(function() {
+      done();
+    })
+    .catch(function (err) {
+      logger.fatal('Unable to create Event Hubs client: ' + err.message);
+      return;
+    });
   });
-};
+}
 
 // Closes the connection to the eventhub and to the DeviceClient.
 function close() {
@@ -69,7 +81,7 @@ function close() {
     eventHubConnection = null;
   }
 
-  if(serviceConnection) { 
+  if(serviceConnection) {
     serviceConnection.close(function(err) {});
     serviceConnection = null;
   }
