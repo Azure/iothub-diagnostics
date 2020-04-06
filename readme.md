@@ -1,3 +1,5 @@
+# This Repo is currently Archived and will no longer be under development
+
 # Diagnosing issues with your IoT Hub
 
 This tool is provided to help diagnose issues with a device connecting to Azure IoT Hubs.
